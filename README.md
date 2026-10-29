@@ -1,33 +1,35 @@
-# scMEDAL AML demo 复现(BMI5101 小组作业)
+# scMEDAL AML Demo Reproduction (BMI5101 Group Project)
 
-复现 [scMEDAL](https://github.com/DeepLearningForPrecisionHealthLab/scMEDAL_for_scRNAseq) 官方 `demo/demo_aml.ipynb`(AML 数据,38,417 细胞 × 2,916 基因,19 个批次),并把 notebook 拆成 5 个阶段便于阅读。原项目与论文版权归 UTSW 作者所有,许可见 [UTSW_License.txt](UTSW_License.txt)(仅限学术和研究用途)。
+This repository reproduces the official `demo/demo_aml.ipynb` of [scMEDAL](https://github.com/DeepLearningForPrecisionHealthLab/scMEDAL_for_scRNAseq) on the AML dataset (38,417 cells × 2,916 genes, 19 batches), and splits the notebook into five stages that are easier to read. The original project and paper belong to the UTSW authors; see [UTSW_License.txt](UTSW_License.txt) (academic and research use only).
 
-## 结果摘要(quick 模式:1 折 × 10 epoch)
+## Results at a glance (quick mode: 1 fold × 10 epochs)
 
-- scMEDAL-FE 的潜在空间批次混合得更好、细胞类型更清楚;scMEDAL-RE 的潜在空间按批次分成小团。
-- 用 FE + RE 合起来预测 Patient_group,准确率从 84.94% 升到 99.14%。
-- quick 模式只适合比较两个模型的相对关系,不能与论文绝对数字比较。
+- The scMEDAL-FE latent space mixes batches better and separates cell types more clearly; the scMEDAL-RE latent space splits into small clusters by batch.
+- Predicting Patient_group from FE + RE combined raises accuracy from 84.94% to 99.14%.
+- Quick mode is only suitable for comparing the two models relative to each other. Do not compare the absolute numbers with the paper.
 
-## 目录
+## Repository layout
 
-| 路径 | 内容 |
+| Path | Contents |
 |---|---|
-| `READING_ORDER.md` | 阅读顺序 |
-| `scMEDAL_demo_walkthrough/` | 00–05 六个阶段:`script.py`(仅供阅读)、`README.md`、结果图表 |
-| `scMEDAL_setup/` | 环境脚本 `setup_scMEDAL38.sh`、`verify_env.py`、`requirements_mac.txt`、`demo_steps_so_far.py` |
-| `patches/mac_compat.patch` | 官方仓库在 Apple Silicon 上运行所需的两处改动 |
-| `notebook/demo_aml_mac_run.ipynb` | 我们实际跑过的 notebook(含输出) |
+| `READING_ORDER.md` | Suggested reading order |
+| `scMEDAL_demo_walkthrough/` | Stages 00–05: `script.py` (annotated, for reading only), `README.md`, result figures |
+| `scMEDAL_setup/` | Environment script `setup_scMEDAL38.sh`, `verify_env.py`, `requirements_mac.txt`, `demo_steps_so_far.py` |
+| `patches/mac_compat.patch` | The two changes to the official repository needed to run on Apple Silicon |
+| `notebook/demo_aml_mac_run.ipynb` | The notebook we actually ran (with outputs) |
 
-## 复现步骤
+## How to reproduce
 
-1. 设置仓库位置(可选,默认 `~/scMEDAL_for_scRNAseq`):`export SCMEDAL_REPO=/你的路径`
-2. `bash scMEDAL_setup/setup_scMEDAL38.sh`:clone 官方仓库、建 Python 3.8.20 环境、装依赖(Apple Silicon Mac)。
-3. 打补丁:在官方仓库根目录运行 `git apply <本仓库>/patches/mac_compat.patch`
-   - `random_effects.py`:`tensorflow_addons` 导入改为可选(它在 Apple Silicon 上无预编译包,且代码未实际使用)。
-   - `utils/defaults.py`:`ROOT_PATH` 默认取仓库目录,可用 `SCMEDAL_ROOT` 覆盖。
-4. 下载数据:Figshare DOI [10.6084/m9.figshare.28414367](https://doi.org/10.6084/m9.figshare.28414367),放到官方仓库 `data/AML_data/`。本仓库不含数据和训练模型。
-5. `python scMEDAL_setup/verify_env.py` 验证环境,然后运行官方 notebook。
+1. (Optional) Set the location of the official repository; the default is `~/scMEDAL_for_scRNAseq`:
+   `export SCMEDAL_REPO=/your/path`
+2. Run `bash scMEDAL_setup/setup_scMEDAL38.sh`. It clones the official repository, creates a Python 3.8.20 conda environment and installs the dependencies (Apple Silicon Mac).
+3. Apply the patch from the root of the official repository:
+   `git apply <this repo>/patches/mac_compat.patch`
+   - `random_effects.py`: makes the `tensorflow_addons` import optional (it has no prebuilt wheel for Apple Silicon and is not actually used by the code).
+   - `utils/defaults.py`: `ROOT_PATH` now defaults to the repository directory and can be overridden with `SCMEDAL_ROOT`.
+4. Download the data from Figshare, DOI [10.6084/m9.figshare.28414367](https://doi.org/10.6084/m9.figshare.28414367), and place it under `data/AML_data/` in the official repository. This repository does not include the data or trained models.
+5. Run `python scMEDAL_setup/verify_env.py` to check the environment, then run the official notebook.
 
-## 注意
+## Notes
 
-同一模型在 `outputs/` 里有多次运行,详见 `scMEDAL_demo_walkthrough/README.md` 的"运行批次"说明。
+The same model has several runs under `outputs/`. See the "run batches" section in `scMEDAL_demo_walkthrough/README.md` for which run each stage uses.

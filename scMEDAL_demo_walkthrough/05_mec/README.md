@@ -1,29 +1,29 @@
-# 阶段 5:MEC 分类器
+# Stage 5: MEC classifier
 
-代码见 [script.py](script.py),原始汇总表见 [results_MEC_RF_summary_all_runs.csv](results_MEC_RF_summary_all_runs.csv)。
+Code: [script.py](script.py). Raw summary table: [results_MEC_RF_summary_all_runs.csv](results_MEC_RF_summary_all_runs.csv).
 
-## 在做什么
+## What it does
 
-在已经训练好的潜在表示上,再训练一个分类器去预测 `Patient_group`(3 类:AML / control / cellline),衡量潜在表示里有多少"患者组"信息。表里的指标名是 `RFAccuracy`,分类器是随机森林(从指标名判断)。比较两种输入:
+On top of the already-trained latent representations, a classifier is trained to predict `Patient_group` (3 classes: AML / control / cellline), to measure how much "patient group" information the latent representations contain. The metric in the table is named `RFAccuracy`, so the classifier is a random forest (judged from the metric name). Two inputs are compared:
 
-- 只用 FE 的潜在表示
-- FE + RE 两个潜在表示拼接
+- The FE latent representation only
+- The FE and RE latent representations concatenated
 
-## 结果
+## Results
 
-汇总表里每种配置有 2 行,因为它统计了 `mec/` 里**所有**运行。**你的是 `00-37` 那两行**,`00-08` 是更早的运行:
+The summary table has 2 rows for each configuration because it covers **all** runs in `mec/`. **Ours are the `00-37` rows**; `00-08` is an earlier run:
 
-| 输入 | 运行时间 | 准确率 | 平衡准确率 | 随机基线准确率 |
+| Input | Run time | Accuracy | Balanced accuracy | Random-baseline accuracy |
 |---|---|---|---|---|
-| 只用 FE | 00-08(旧) | 83.28 | 60.62 | 61.41 |
-| **只用 FE** | **00-37(你的)** | **84.94** | **64.94** | 61.41 |
-| FE + RE | 00-08(旧) | 99.06 | 98.26 | 61.41 |
-| **FE + RE** | **00-37(你的)** | **99.14** | **98.43** | 61.41 |
+| FE only | 00-08 (old) | 83.28 | 60.62 | 61.41 |
+| **FE only** | **00-37 (ours)** | **84.94** | **64.94** | 61.41 |
+| FE + RE | 00-08 (old) | 99.06 | 98.26 | 61.41 |
+| **FE + RE** | **00-37 (ours)** | **99.14** | **98.43** | 61.41 |
 
-## 怎么读
+## How to read it
 
-- **FE + RE 明显好于只用 FE**:准确率 84.94 → 99.14,平衡准确率 64.94 → 98.43。notebook 里的结论("合起来分类更好")在你的结果里成立。新旧两次运行结论一致,说明这不是偶然。
-- 只用 FE 时,准确率(84.94)和平衡准确率(64.94)差距很大。平衡准确率是各类别召回率的平均,所以这说明只用 FE 时,数量少的类别识别得很差;加上 RE 之后两个数几乎相等,各类都识别得好。
-- "随机基线准确率 61.41" 是代码输出的列,我没有核对它的具体算法。
-- 可能的原因(我的推测,没有验证):Patient_group 和批次/供体高度相关,而 RE 的潜在表示编码了批次信息,所以拼上 RE 后分类大幅提升。要验证需要做额外实验,例如换成留出整批次的划分。
-- 这是 1 折 × 10 个 epoch 的结果,没有置信区间。
+- **FE + RE is clearly better than FE only**: accuracy 84.94 → 99.14, balanced accuracy 64.94 → 98.43. The notebook's conclusion ("classification is better when combined") holds in our results. The old and new runs agree, so this is not a coincidence.
+- With FE only, accuracy (84.94) and balanced accuracy (64.94) differ a lot. Balanced accuracy is the mean recall over classes, so this means the smaller classes are recognised poorly with FE only. After adding RE the two numbers are almost equal and every class is recognised well.
+- "Random-baseline accuracy 61.41" is a column produced by the code; I did not check exactly how it is computed.
+- A possible reason (my speculation, not verified): Patient_group is strongly correlated with batch/donor, and the RE latent representation encodes batch information, so concatenating RE greatly improves classification. Verifying this would need extra experiments, for example splitting with whole batches held out.
+- These are 1-fold × 10-epoch results, without confidence intervals.

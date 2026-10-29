@@ -1,29 +1,29 @@
-# 阶段 4:genomap
+# Stage 4: genomap
 
-代码见 [script.py](script.py)。
+Code: [script.py](script.py).
 
-## 在做什么
+## What it does
 
-genomap 把一个细胞的 2,916 个基因表达值排成一张 2D 的"基因图像"。这里取 Mono / Mono-like 两类细胞,把**同一个细胞**在这些状态下的图像并排放在一起:
+genomap arranges the 2,916 gene-expression values of a cell into a 2D "gene image". Here we take Mono / Mono-like cells and place the images of **the same cell** in several states side by side:
 
-1. 原始输入(`input_train`)
-2. FE 的重建(`fe_ae_recon_train`)
-3. RE 重建成不同批次(`recon_batch_train_BM5`、`..._MUTZ3`、`..._AML420B`)
+1. The original input (`input_train`)
+2. The FE reconstruction (`fe_ae_recon_train`)
+3. RE reconstructions into different batches (`recon_batch_train_BM5`, `..._MUTZ3`, `..._AML420B`)
 
-标题里红色的那张是该细胞原本所在的批次(`original batch`),其余带 `cf batch` 的是"换成别的批次后"的重建(cf = counterfactual,反事实)。颜色范围固定在 -1 到 2。
+The panel with the red title is the cell's original batch (`original batch`); the others, labelled `cf batch`, are reconstructions "as if the cell were in another batch" (cf = counterfactual). The colour range is fixed from -1 to 2.
 
-## 结果:`results/genomap_1.png` ~ `genomap_4.png`
+## Results: `results/genomap_1.png` to `genomap_4.png`
 
-我只仔细看了第 1 张(细胞 `MUTZ3_TAAATCTGATTT_Mono-like`),其余 3 张结构相同,我没有逐张查看:
+I only examined the first figure carefully (cell `MUTZ3_TAAATCTGATTT_Mono-like`). The other 3 have the same structure and I did not check them one by one:
 
 ![](results/genomap_1.png)
 
-- 第 1、2 张(输入和 FE 重建)看起来很相似,整体偏平滑,说明 FE 重建基本还原了输入。
-- 后 3 张(RE 重建到不同批次)对比度明显更强,边缘出现大片亮黄色,而且三个批次之间的图案不同。这说明 RE 的重建里带有批次特异的成分,换批次后基因表达的"样子"会变。
-- 也就是说,RE 能把同一个细胞"换"到不同批次再重建出来,不同批次的结果有可见差别。这是对这一张图的观察,不是统计结论。
+- Panels 1 and 2 (input and FE reconstruction) look very similar and rather smooth, which means the FE reconstruction largely recovers the input.
+- The last 3 panels (RE reconstructed into different batches) have clearly stronger contrast, with large bright-yellow areas at the edges, and the patterns differ between the three batches. This suggests the RE reconstruction contains batch-specific components, so the "look" of gene expression changes when the batch is swapped.
+- In other words, RE can "move" the same cell to different batches and reconstruct it, with visible differences between batches. This is an observation of this one figure, not a statistical conclusion.
 
-## 注意
+## Notes
 
-- 日志显示每个目标批次只抽到 1 到 2 个符合条件的细胞,并出现了 `No cells available ... Skipping batch` 的提示,另外随机补了 296 个细胞凑样本(日志原文没有完全看懂每一行的含义),所以这是几个细胞的**定性**展示,不能代表整体。
-- `num_iter=200` 是作者标注的"快速测试"设置。
-- 输出目录里除了这 4 张图,还有 `singlecell_gene_std_acrossbatches/` 等其他图,这次没有展开。
+- The log shows that only 1 or 2 matching cells were sampled for each target batch, and messages such as `No cells available ... Skipping batch` appear. 296 more cells were also drawn at random to fill the sample (I did not fully understand what every log line means), so this is a **qualitative** display of a few cells and does not represent the whole dataset.
+- `num_iter=200` is the setting the authors label as a "quick test".
+- Besides these 4 figures, the output directory contains other plots such as `singlecell_gene_std_acrossbatches/`, which were not examined here.

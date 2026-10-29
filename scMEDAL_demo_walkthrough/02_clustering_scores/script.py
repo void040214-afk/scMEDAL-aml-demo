@@ -1,16 +1,18 @@
-# 阶段 2:聚类分数(对应 notebook 第 9 个代码格)
-# 本文件只用于阅读理解。`aml`、`model_folder_dict` 来自 00_setup/script.py。
+# Stage 2: clustering scores (corresponds to notebook code cell 9)
+# This file is for reading only. `aml` and `model_folder_dict` come from 00_setup/script.py.
 
-# 读取两个模型各自的 50 维潜在空间,用"批次"和"细胞类型"两种标签分别计算聚类质量:
-#   1/db        = Davies-Bouldin 指数的倒数(越大越好)
-#   ch          = Calinski-Harabasz 指数(越大越好)
-#   silhouette  = 轮廓系数(-1 到 1,越大越好)
-# 含义:分数越高 = 按这种标签分组后,组内更紧、组间更开。
-#   - 对"批次"分数高 = 潜在空间里能按批次分开(批次信息被编码了)
-#   - 对"细胞类型"分数高 = 潜在空间里能按细胞类型分开(生物学信息被保留了)
+# Read the 50-dimensional latent space of each model and compute clustering quality with two labels,
+# "batch" and "cell type":
+#   1/db        = reciprocal of the Davies-Bouldin index (larger is better)
+#   ch          = Calinski-Harabasz index (larger is better)
+#   silhouette  = silhouette coefficient (-1 to 1, larger is better)
+# Meaning: a higher score = when grouped by this label, groups are tighter inside and farther apart.
+#   - High score for "batch" = the latent space separates by batch (batch information is encoded)
+#   - High score for "cell type" = the latent space separates by cell type (biological information is kept)
 res = aml.clustering_scores(model_folder_dict)
 
-# 结果表同时写到 outputs/.../AML_demo_mine/ 下的 test_allscores.csv 等文件。
-# 只跑了 1 个 fold,所以置信区间(CI_lower / CI_upper)全是 NaN,这是正常的;
-# 默认按 5 折、自由度 4 计算置信区间(见 utils.compare_results_utils.process_confidence_intervals)。
+# The result table is also written to files such as test_allscores.csv under outputs/.../AML_demo_mine/.
+# Only 1 fold was run, so the confidence intervals (CI_lower / CI_upper) are all NaN, which is normal;
+# by default they are computed assuming 5 folds with 4 degrees of freedom
+# (see utils.compare_results_utils.process_confidence_intervals).
 res

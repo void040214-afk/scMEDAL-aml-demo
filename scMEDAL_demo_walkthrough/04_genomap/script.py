@@ -1,32 +1,35 @@
-# 阶段 4:genomap(对应 notebook 第 14、15 个代码格)
-# 本文件只用于阅读理解。
+# Stage 4: genomap (corresponds to notebook code cells 14 and 15)
+# This file is for reading only.
 
-# genomap:把一个细胞的 2,916 个基因表达值,按基因之间的关系排成一张 2D "基因图像"。
-# 这里用它来对比:同一个细胞,在原始输入、FE 重建、以及 RE 重建到不同批次时,基因表达图像有什么变化。
-batches = ["AML420B", "BM5", "MUTZ3"]      # 想看的 3 个批次
-celltype = ["Mono", "Mono-like"]           # 只取这两类细胞
-# 前提:genomap 要用到 FE 和 RE 的重建结果,所以必须先完成阶段 1 的训练
+# genomap: arranges the 2,916 gene-expression values of a cell into a 2D "gene image" according to the
+# relationships between genes.
+# Here it is used to compare how the gene-expression image of the same cell changes for the raw input,
+# the FE reconstruction, and the RE reconstruction into different batches.
+batches = ["AML420B", "BM5", "MUTZ3"]      # the 3 batches to look at
+celltype = ["Mono", "Mono-like"]           # only these two cell types
+# Prerequisite: genomap uses the FE and RE reconstructions, so the Stage 1 training must be finished first
 selected_models = {k: model_folder_dict[k] for k in ("scmedalfe", "scmedalre")}
 
 pipeline, summary = aml.genomap(
     selected_models,
-    n_batches=19,            # 数据共 19 个批次
-    num_iter=200,            # genomap 迭代次数;作者注释:快速测试用 200,否则 100(原文如此,未核对哪个更合适)
-    cell_id_col="Cell",      # 元数据里细胞 ID 的列名
-    gene_index_col="Gene",   # 基因名的列名
+    n_batches=19,            # the data has 19 batches in total
+    num_iter=200,            # genomap iterations; author's comment: 200 for a quick test, otherwise 100 (as written, not checked which is more appropriate)
+    cell_id_col="Cell",      # column name of the cell ID in the metadata
+    gene_index_col="Gene",   # column name of the gene names
     celltype=["Mono", "Mono-like"],
     batches=batches,
-    model="scmedalre",       # 用 RE 的重建作为"换批次后的细胞"
+    model="scmedalre",       # use the RE reconstruction as the "cell moved to another batch"
     typ="train",
     split=1,
-    add_inputs_fe=True,      # 同时加入原始输入和 FE 重建,方便并排对比
+    add_inputs_fe=True,      # also include the raw input and the FE reconstruction for side-by-side comparison
     extra_recon="fe",
-    min_val=-1,              # 画图的颜色范围:-1 到 2
+    min_val=-1,              # colour range of the plots: -1 to 2
     max_val=2,
 )
-# 日志里 "Selected 1 cell from batch XXX" 表示每个批次只抽到 1 个符合条件的细胞,
-# 另外再抽 296 个细胞凑样本;所以最终展示的是少数几个细胞,不是统计结果,只能用来定性观察。
+# The log line "Selected 1 cell from batch XXX" means only 1 matching cell was drawn from each batch,
+# and another 296 cells were drawn to fill the sample; so what is finally shown is a handful of cells,
+# not a statistical result, and can only be used for qualitative observation.
 
-# ---- 第 15 个代码格:显示图片 ----
-# 只是用 glob 找到 AML_demo_mine/genomap/genomap_plots/*/genomap_plots_scfewbatches_nogenelabels/*
-# 里的图,逐个 display 出来。
+# ---- Code cell 15: display the images ----
+# It only uses glob to find the images in
+# AML_demo_mine/genomap/genomap_plots/*/genomap_plots_scfewbatches_nogenelabels/* and displays them one by one.

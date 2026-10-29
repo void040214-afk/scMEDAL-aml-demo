@@ -1,12 +1,12 @@
-"""环境配置完成之后、到目前为止做过的所有代码(带注释)。
+"""All the code run so far after the environment was set up (annotated).
 
-这个文件是"记录 + 讲解"用的,每一段都对应你实际执行过的一步。
-段 A 在终端 / 脚本里跑;段 B、C 是 demo_aml.ipynb 的第 1、3 个代码格。
+This file is a "record + explanation"; every section corresponds to a step we actually executed.
+Section A runs in a terminal / script; sections B and C are code cells 1 and 3 of demo_aml.ipynb.
 """
 
 # =============================================================================
-# 段 A:检查 AML 数据是否完整(只读,不改任何文件)
-# 数据位置:scMEDAL_for_scRNAseq/data/AML_data/log_transformed_2916hvggenes/
+# Section A: check that the AML data is complete (read-only, no file is modified)
+# Data location: scMEDAL_for_scRNAseq/data/AML_data/log_transformed_2916hvggenes/
 # =============================================================================
 import os
 import numpy as np
@@ -14,17 +14,17 @@ import pandas as pd
 
 DATA = os.path.join(os.path.expanduser(os.environ.get("SCMEDAL_REPO", "~/scMEDAL_for_scRNAseq")), "data/AML_data/log_transformed_2916hvggenes")
 
-# exprMatrix.npy:细胞 x 基因的表达矩阵(log 变换后,2916 个高变基因)。
-# mmap_mode="r" 只在需要时从磁盘读,不把 448MB 一次性装进内存。
+# exprMatrix.npy: cell x gene expression matrix (log-transformed, 2916 highly variable genes).
+# mmap_mode="r" reads from disk only when needed instead of loading all 448MB into memory at once.
 X = np.load(f"{DATA}/exprMatrix.npy", mmap_mode="r")
-print(X.shape, X.dtype)          # 期望 (38417, 2916) float32
+print(X.shape, X.dtype)          # expected (38417, 2916) float32
 
-# meta.csv:每个细胞一行的注释(细胞类型 CellType、病人分组 Patient_group 等)
+# meta.csv: one annotation row per cell (cell type CellType, patient group Patient_group, etc.)
 meta = pd.read_csv(f"{DATA}/meta.csv")
-print(meta.shape)                # 期望 (38417, 38),行数要和矩阵一致
+print(meta.shape)                # expected (38417, 38); the number of rows must match the matrix
 
-# 5 个交叉验证 split,每个里有 train / val / test。
-# 检查:三份行数相加 == 总细胞数;矩阵行数 == meta 行数;基因数 == 2916。
+# 5 cross-validation splits, each with train / val / test.
+# Checks: the three parts add up to the total number of cells; matrix rows == meta rows; number of genes == 2916.
 for s in range(1, 6):
     rows = []
     for part in ("train", "val", "test"):
@@ -33,51 +33,52 @@ for s in range(1, 6):
         assert Xp.shape[0] == len(mp) and Xp.shape[1] == 2916
         rows.append(Xp.shape[0])
     assert sum(rows) == 38417
-# 结果:全部通过。Patient_group 有 AML / control / cellline 三类,
-# 对应后面 MEC 分类器的 n_pred=3。
+# Result: all checks passed. Patient_group has three classes (AML / control / cellline),
+# which corresponds to n_pred=3 of the MEC classifier later.
 
 
 # =============================================================================
-# 段 B:notebook 第 1 个代码格 —— 切换工作目录并导入
+# Section B: notebook code cell 1 -- change the working directory and import
 # =============================================================================
 import os
 
-# Jupyter 默认把 notebook 所在的 demo/ 当作当前目录,
-# 而 models/、utils/、analysis/ 在它的上一级(仓库根目录),
-# 所以必须先 chdir 到仓库根目录,否则 `from models.models import ...` 会报
-# ModuleNotFoundError: No module named 'models'。
-# (原 notebook 里这行是注释掉的,写的还是作者自己的路径。)
-os.chdir(os.path.expanduser(os.environ.get("SCMEDAL_REPO", "~/scMEDAL_for_scRNAseq")))  # 改成你 clone 官方仓库的位置
+# Jupyter treats demo/ (where the notebook lives) as the current directory by default,
+# while models/, utils/ and analysis/ are one level up (the repository root),
+# so we must chdir to the repository root first, otherwise `from models.models import ...` fails with
+# ModuleNotFoundError: No module named 'models'.
+# (In the original notebook this line is commented out and still contains the authors' own path.)
+os.chdir(os.path.expanduser(os.environ.get("SCMEDAL_REPO", "~/scMEDAL_for_scRNAseq")))  # change to where you cloned the official repository
 
-# 唯一入口函数:按"模型名 + 数据集名"训练一个预设好的实验。
+# The only entry function: trains a preset experiment by "model name + dataset name".
 from models.models import train_model_on_named_experiment
-# 导入时打印的 OUTPUTS_DIR 就是结果保存位置:<仓库>/outputs
-# 红色 WARNING(Adam 在 M1/M2 上慢、lr 已过时)只是提示,可以忽略。
+# The OUTPUTS_DIR printed on import is where results are saved: <repo>/outputs
+# The red WARNINGs (Adam is slow on M1/M2, lr is deprecated) are just hints and can be ignored.
 
 
 # =============================================================================
-# 段 C:notebook 第 3 个代码格 —— 训练两个模型
+# Section C: notebook code cell 3 -- train the two models
 # =============================================================================
-# "scMEDAL-FE" = 固定效应(fixed effects)模型
-# "scMEDAL-RE" = 随机效应(random effects)模型,损失里多了 la_clus_loss(潜空间聚类项)
-# "AML" = 数据集名,对应上面检查过的那份数据
-# n_latent_dims=50:潜空间(压缩后的表示)有 50 维
-# quick=True:快速模式 —— 只跑 1 个 fold、10 个 epoch
-#            (论文是 5 fold x 500 epoch,所以这里的结果只是演示,不是论文数字)
+# "scMEDAL-FE" = fixed-effects model
+# "scMEDAL-RE" = random-effects model, with an extra la_clus_loss (latent-space clustering term) in the loss
+# "AML" = dataset name, corresponding to the data checked above
+# n_latent_dims=50: the latent space (compressed representation) has 50 dimensions
+# quick=True: quick mode -- only 1 fold and 10 epochs
+#            (the paper uses 5 folds x 500 epochs, so the results here are only a demonstration, not paper numbers)
 scmedalfe_aml = train_model_on_named_experiment(
     "scMEDAL-FE", "AML", model_kwargs={"n_latent_dims": 50}, train_kwargs={"quick": True})
 scmedalre_aml = train_model_on_named_experiment(
     "scMEDAL-RE", "AML", model_kwargs={"n_latent_dims": 50}, train_kwargs={"quick": True})
 
-# 每个模型训练完会写三类东西到 outputs/AML/ 下:
-#   saved_models/  模型权重
-#   latent_space/  训练/验证/测试细胞的 50 维潜空间表示(后面聚类、UMAP、MEC 都读它)
-#   figures/       训练曲线等图
-# 目录名里带时间戳,例如 ..._2026-10-29_00-15。
+# After training, each model writes three kinds of files under outputs/AML/:
+#   saved_models/  model weights
+#   latent_space/  50-dimensional latent representations of train/val/test cells (clustering, UMAP and MEC all read this)
+#   figures/       training curves and other plots
+# Directory names carry a timestamp, e.g. ..._2026-10-29_00-15.
 #
-# 注意两个容易误解的地方:
-#  1) 目录名里写着 epochs-500,但那是默认参数拼出来的名字;
-#     quick 模式在 models/base.py 里把 model_params['epochs'] 覆盖成了 10,实际只训练 10 个 epoch。
-#  2) 日志里的 "Early stopping ... val_loss which is not available" 警告:
-#     回调监控的是 val_loss,但模型记录的是 val_total_loss,所以早停和"保存最佳模型"没生效。
-#     10 个 epoch 本来就不会早停,对 demo 没影响。
+# Two things that are easy to misread:
+#  1) The directory name says epochs-500, but that name is built from the default parameters;
+#     quick mode overrides model_params['epochs'] to 10 in models/base.py, so only 10 epochs are actually trained.
+#  2) The "Early stopping ... val_loss which is not available" warning in the log:
+#     the callback monitors val_loss, but the model logs val_total_loss, so early stopping and
+#     "save best model" do not take effect.
+#     10 epochs would never trigger early stopping anyway, so this has no effect on the demo.

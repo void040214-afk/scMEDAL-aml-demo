@@ -1,34 +1,35 @@
-# scMEDAL AML demo 拆解
+# scMEDAL AML demo walkthrough
 
-把 `demo/demo_aml.ipynb` 按 5 个阶段拆开,每个阶段一个文件夹:**`script.py`(带注释的代码,只用于阅读)+ 结果图表 + `README.md`(这一步在做什么、结果怎么读)**。原 notebook 没有被改动。
+`demo/demo_aml.ipynb` is split into 5 stages, one folder per stage: **`script.py` (annotated code, for reading only) + result figures/tables + `README.md` (what the step does and how to read the results)**. The original notebook was not modified.
 
-## 整体流程
+## Overall workflow
 
 ```
-AML 数据(38,417 细胞 × 2,916 基因,19 个批次)
+AML data (38,417 cells × 2,916 genes, 19 batches)
       │
- 01 训练 ──► scMEDAL-FE(固定效应)、scMEDAL-RE(随机效应),各得到每个细胞的 50 维潜在表示
+ 01 Train ──► scMEDAL-FE (fixed effects) and scMEDAL-RE (random effects),
+      │        each giving a 50-dimensional latent representation per cell
       │
-      ├─ 02 聚类分数:潜在空间按"批次 / 细胞类型"分得有多清楚
-      ├─ 03 UMAP:把潜在空间画出来
-      ├─ 04 genomap:同一个细胞换批次后基因表达图像的变化
-      └─ 05 MEC:用潜在表示预测 Patient_group,看里面有多少生物学信息
+      ├─ 02 Clustering scores: how clearly the latent space separates "batch" / "cell type"
+      ├─ 03 UMAP: plot the latent space
+      ├─ 04 genomap: how the gene-expression image of the same cell changes when the batch is swapped
+      └─ 05 MEC: predict Patient_group from the latent representations to see how much biological information they hold
 ```
 
-## 一句话总结你的结果
+## Summary of our results
 
-- FE 的潜在空间里**批次混合得好、细胞类型更清楚**;RE 的潜在空间**按批次分成小团**(02、03)。
-- 把 FE 和 RE 合起来预测 Patient_group,准确率从 **84.94% 升到 99.14%**(05)。
-- 这些是 quick 模式(1 折 × 10 个 epoch)的结果,只适合看两个模型的相对关系,不能和论文的绝对数字比较。
+- In the FE latent space, **batches are mixed well and cell types are clearer**; the RE latent space **splits into small clusters by batch** (02, 03).
+- Combining FE and RE to predict Patient_group raises accuracy from **84.94% to 99.14%** (05).
+- These are quick-mode results (1 fold × 10 epochs). They are only suitable for comparing the two models against each other, not for comparing with the absolute numbers in the paper.
 
-## 必须知道的一件事:运行批次不完全一致
+## One thing to know: the runs are not all from the same batch
 
-`outputs/` 里同一个模型有多次运行(时间不同),其中一部分不是你在 notebook 里跑的。本拆解用到的是:
+`outputs/` contains several runs of the same model (at different times), and some of them were not run in our notebook. This walkthrough uses:
 
-| 阶段 | 实际使用的运行 |
+| Stage | Run actually used |
 |---|---|
-| 01 训练曲线 | FE:`..._00-15`,RE:`..._00-16`(和分析用的是同一批) |
-| 02、03、04 | 分析的是 FE `00-15` + RE `00-16` |
-| 05 MEC | 你的是 `00-37` 那两行(`00-08` 是更早的运行) |
+| 01 Training curves | FE: `..._00-15`, RE: `..._00-16` (the same runs the analysis uses) |
+| 02, 03, 04 | Analysis of FE `00-15` + RE `00-16` |
+| 05 MEC | Our rows are the two `00-37` rows (`00-08` is an earlier run) |
 
-**notebook 文件里保存的训练日志是 `00-24` 那次重跑的**,和后面分析用的 `00-15/00-16` 不是同一批模型。两次的设置完全相同,只是随机性不同,所以这里的训练数字取自 `00-15/00-16` 自带的 `history_allfolds.csv`,而不是 notebook 里的输出。
+**The training log saved in the notebook file comes from the `00-24` re-run**, which is not the same set of models as the `00-15/00-16` runs used in the later analysis. The two runs have identical settings and differ only in randomness, so the training numbers here are taken from the `history_allfolds.csv` of `00-15/00-16`, not from the notebook output.

@@ -1,26 +1,27 @@
-# 阶段 5:MEC 分类器(对应 notebook 第 17、18 个代码格)
-# 本文件只用于阅读理解。`model_paths` 在 notebook 第 5 格由 model_folder_dict 拼出来,
-# 指向两个模型的潜在空间文件夹。
+# Stage 5: MEC classifier (corresponds to notebook code cells 17 and 18)
+# This file is for reading only. `model_paths` is built from model_folder_dict in notebook cell 5 and
+# points to the latent-space folders of the two models.
 
 from models.models import train_model_on_named_experiment
 
-# MEC(Mixed Effects Classifier):在已经训练好的潜在表示上,再训练一个分类器,
-# 目标是预测 Patient_group(3 类:AML / control / cellline),看潜在表示里有多少"患者组"信息。
-# 汇总表里的指标名带 RF(RFAccuracy 等),这里的分类器是随机森林。
+# MEC (Mixed Effects Classifier): trains a classifier on top of the already-trained latent representations.
+# The goal is to predict Patient_group (3 classes: AML / control / cellline) and see how much
+# "patient group" information the latent representations contain.
+# The metric names in the summary table carry RF (RFAccuracy etc.), so the classifier here is a random forest.
 
-# 实验 A:只用 FE 的潜在空间
+# Experiment A: FE latent space only
 train_model_on_named_experiment(
     "MEC", "AML",
     train_kwargs={"quick": True, "results_path_dict": model_paths},
     model_kwargs={
-        "n_pred": 3,                       # 预测 3 个类别
-        "bio_col": "Patient_group",        # 预测目标列
+        "n_pred": 3,                       # predict 3 classes
+        "bio_col": "Patient_group",        # target column to predict
         "models_list": list(model_paths.keys()),
-        "latent_keys_config": {"fe_latent": "scmedalfe_latent"},   # 只喂 FE 的潜在表示
+        "latent_keys_config": {"fe_latent": "scmedalfe_latent"},   # feed only the FE latent representation
     },
 )
 
-# 实验 B:FE + RE 两个潜在空间拼起来
+# Experiment B: FE and RE latent spaces concatenated
 train_model_on_named_experiment(
     "MEC", "AML",
     train_kwargs={"quick": True, "results_path_dict": model_paths},
@@ -32,9 +33,10 @@ train_model_on_named_experiment(
     },
 )
 
-# 汇总所有 MEC 运行的结果(在测试集上)
+# Summarise the results of all MEC runs (on the test set)
 from utils.compare_results_utils import get_all_mec_metrics
 df, _ = get_all_mec_metrics(AML_OUTPUTS_DIR, AML_EXPERIMENT_NAME, split="test")
 df
-# 重要:这个函数会汇总 mec/ 文件夹里"所有"运行,不只是这一次,
-# 所以表里每种配置会出现多行(不同运行时间)。要看自己的,按 run_name 末尾的时间挑。
+# Important: this function summarises ALL runs in the mec/ folder, not only this one,
+# so each configuration appears in several rows (different run times). To see your own,
+# pick by the timestamp at the end of run_name.
