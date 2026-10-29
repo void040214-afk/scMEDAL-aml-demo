@@ -1,0 +1,32 @@
+diff --git a/models/scMEDAL/random_effects.py b/models/scMEDAL/random_effects.py
+index eeff3a5..4131103 100755
+--- a/models/scMEDAL/random_effects.py
++++ b/models/scMEDAL/random_effects.py
+@@ -19,7 +19,12 @@ import tensorflow.keras.layers as tkl
+ from tensorflow_probability import layers as tpl
+ from tensorflow_probability import distributions as tpd
+ 
+-from tensorflow_addons.layers import InstanceNormalization
++# tensorflow_addons is EOL and has no Apple-Silicon wheel; InstanceNormalization is not used
++# (its only reference is commented out below), so make the import optional.
++try:
++    from tensorflow_addons.layers import InstanceNormalization
++except ImportError:  # pragma: no cover
++    InstanceNormalization = None
+ 
+ def make_posterior_fn(post_loc_init_scale, post_scale_init_min, post_scale_init_range):
+     def _re_posterior_fn(kernel_size, bias_size=0, dtype=None):
+diff --git a/utils/defaults.py b/utils/defaults.py
+index e42dcbb..811ec46 100644
+--- a/utils/defaults.py
++++ b/utils/defaults.py
+@@ -4,7 +4,8 @@ DEFAULTS_ABS_PATH = os.path.abspath(__file__)
+ 
+ # REPOSITORY PATH
+ # update your ROOT_PATH
+-ROOT_PATH = "/your/project/path"
++# ROOT_PATH defaults to this repository (parent of utils/); override with env var SCMEDAL_ROOT if needed
++ROOT_PATH = os.environ.get("SCMEDAL_ROOT", os.path.dirname(os.path.dirname(DEFAULTS_ABS_PATH)))
+ 
+ 
+ if ROOT_PATH == "/your/project/path" or not os.path.exists(ROOT_PATH):

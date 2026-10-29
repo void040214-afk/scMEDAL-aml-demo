@@ -1,0 +1,5 @@
+,latent,RFAccuracy_mean,RFAccuracy_95CI_lower,RFAccuracy_95CI_upper,RFBalancedAccuracy_mean,RFBalancedAccuracy_95CI_lower,RFBalancedAccuracy_95CI_upper,ChanceAccuracy_mean,ChanceAccuracy_95CI_lower,ChanceAccuracy_95CI_upper,run_name
+0,scmedalfe_latent,83.28,,,60.62,,,61.41,,,scmedalfe_latent_n_pred-3_bio_col-Patient_group_2026-10-29_00-08
+0,scmedalfe_latent,84.94,,,64.94,,,61.41,,,scmedalfe_latent_n_pred-3_bio_col-Patient_group_2026-10-29_00-37
+0,scmedalfe_latent_re_latent-scmedalre_latent,99.06,,,98.26,,,61.41,,,scmedalfe_latent_re_latent-scmedalre_latent_n_pred-3_bio_col-Patient_group_2026-10-29_00-08
+0,scmedalfe_latent_re_latent-scmedalre_latent,99.14,,,98.42999999999999,,,61.41,,,scmedalfe_latent_re_latent-scmedalre_latent_n_pred-3_bio_col-Patient_group_2026-10-29_00-37
